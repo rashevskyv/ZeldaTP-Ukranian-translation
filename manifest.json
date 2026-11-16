@@ -1,0 +1,13 @@
+{
+  "game": "The Legend of Zelda: Twilight Princess (GameCube and Wii, USA)",
+  "game_id": "GZ2E01",
+  "revision": 0,
+  "wii": {
+    "game_id": "RZDE01",
+    "revision": 0,
+    "files": [
+      "res/Fontus/fontres.arc"
+    ]
+  },
+  "translation_version": "2026-11-10"
+}
