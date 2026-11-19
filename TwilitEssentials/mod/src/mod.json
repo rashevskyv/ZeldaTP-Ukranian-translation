@@ -1,0 +1,16 @@
+{
+  "id": "ua.zeldatp.twilit_essentials_uk",
+  "name": "Twilit Essentials: Українська",
+  "version": "0.1.0",
+  "author": "ZeldaTP Ukrainian translation team",
+  "description": "Ukrainian language for the Twilit Essentials interface.",
+  "abi": 1,
+  "imports": [
+    {
+      "service_id": "com.dusklight.twilit_essentials.localization",
+      "major": 1,
+      "min_minor": 0,
+      "optional": true
+    }
+  ]
+}
