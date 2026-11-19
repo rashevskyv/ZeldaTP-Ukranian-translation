@@ -2,7 +2,8 @@
 user's own game dump. The mode in config.json picks the platform:
 
 - ``gc_iso`` / ``disc``: GameCube or Wii image (.iso/.rvz/.gcz/.wia/.ciso) -> ``<name>_UA.iso`` (one file for Dolphin and
-  for the console). A Wii image is detected by its game id in the manifest.
+  for the console). A Wii image is detected by its game id in the manifest. When the repository has a
+  ``Dusklight/*.dusk`` mod, the patcher asks first and can put that mod into Dusklight's mods folder instead.
 - ``wiiu_files``: a Wii U game folder -> ``<name>_UA`` with a Cemu graphic pack and an SDCafiine folder.
 - ``nup``: a Switch 2 ``.nup`` package -> ``<name> (UA).nup`` (updated in place when it can) plus a ``<name> (UA) PC``
   romfs overlay folder that NX2navi and Hookshot read.
@@ -22,7 +23,7 @@ import tempfile
 import urllib.request
 import zipfile
 
-PATCHER_VERSION = "1.2.1"
+PATCHER_VERSION = "1.2.2"
 
 
 def base_dir():
@@ -567,6 +568,47 @@ def offer_nx2navi(pc_dir):
     print(f"NX2navi: lang = ru, mods_dir = {mods}. Старий файл: {ini}.bak")
 
 
+# -- Dusklight (PC port): the translation as a .dusk mod ------------------------------------------------------------
+
+def wants_dusklight():
+    print("Для чого патчити?\n  [1] Dolphin або консоль (образ _UA.iso)\n  [2] Dusklight (ПК-порт, мод .dusk)")
+    try:
+        return input("Оберіть номер (1): ").strip() == "2"
+    except EOFError:
+        return False
+
+
+def dusklight_mods(folder):
+    """Dusklight's user mods folder: data_location.json next to dusklight.exe or in %APPDATA% picks the data folder."""
+    pref = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "TwilitRealm", "Dusklight")
+    for place in ([folder] if folder else []) + [pref]:
+        try:
+            with open(os.path.join(place, "data_location.json"), encoding="utf-8") as stream:
+                where = json.load(stream)
+        except (OSError, ValueError):
+            continue
+        if where.get("mode") == "portable" and folder:
+            return os.path.join(folder, "data", "mods")
+        if where.get("mode") == "custom" and where.get("customPath"):
+            return os.path.join(where["customPath"], "mods")
+        break
+    return os.path.join(pref, "mods")
+
+
+def install_dusk(dusk):
+    """Copy the repository's .dusk into Dusklight's mods folder. The game disc stays the original English one."""
+    folder = input("Вкажіть теку Dusklight (там, де dusklight.exe; Enter — стандартна): ").strip().strip('"')
+    if folder and not os.path.isfile(os.path.join(folder, "dusklight.exe")):
+        raise Fail(f"У теці {folder} немає dusklight.exe.")
+    mods = dusklight_mods(folder)
+    os.makedirs(mods, exist_ok=True)
+    target = os.path.join(mods, os.path.basename(dusk))
+    copy_if_changed(dusk, target)
+    print("Dusklight запускайте з оригінальним англійським образом GameCube (GZ2E01); переклад, шрифти HD і "
+          "заголовок дає мод. Увімкніть його в меню Mods.")
+    return target
+
+
 # -- the patcher itself: newer version from the repository ----------------------------------------------------------
 
 def raw_url(config):
@@ -754,7 +796,11 @@ def main(argv):
               + (f" ({head[:7]})" if head else " (версію репозиторію визначити не вдалося)"))
         print_news(config, store.get("_last_commit"), head)
         ctx = {"commit": head, "store": store, "clean": clean}
-        output = MODES[config["mode"]](manifest, repo, work, ctx)
+        dusks = sorted(glob.glob(os.path.join(repo, "Dusklight", "*.dusk")))
+        if config["mode"] in ("gc_iso", "disc") and dusks and wants_dusklight():
+            output = install_dusk(dusks[0])
+        else:
+            output = MODES[config["mode"]](manifest, repo, work, ctx)
         if config["mode"] == "nup":
             offer_nx2navi(output.replace(" (UA).nup", " (UA) PC"))
         if head and store.get("_last_commit") != head:
