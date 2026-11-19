@@ -18,3 +18,7 @@
 # Twilit Essentials — Ukrainian UI
 
 Ukrainian localization of the Twilit Essentials UI. Files for the authors: `mod/res/localization/uk/` (same layout as `res/localization/en/`, 1937 keys, placeholders checked). Copy the `uk` folder next to `en` to ship it built in, or use the `.dusk` add-on that registers the language through the localization service.
+
+Note: the `.dusk` add-on is built for our Ukrainian game patch. `mod/encode_for_game_font.py` rewrites the keys that
+Twilit Essentials draws with the Hylia glyph atlas (U+0020–U+00FF only) or the game message font into the game's
+Latin-1 encoding of Cyrillic. The JSON files in `mod/res/localization/uk/` stay plain Unicode.
