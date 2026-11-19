@@ -6,7 +6,7 @@ DST = pathlib.Path(r'D:\RomHacking_tmp\te_uk_mod\proj\res\localization\uk')
 M = json.loads(pathlib.Path(r'E:\Emulators\RomHacking\Zelda\Twilight Princess\GC + Wii\picoripi\translation_map.json').read_text('utf-8'))
 M = {k: v for k, v in M.items() if len(k) == 1 and len(v) == 1}
 used = set(M.values())
-PUNCT = {'«': '"', '»': '"', '—': '-', '–': '-', '…': '...', '’': "'", 'ʼ': "'", '“': '"', '”': '"', '\u00a0': ' '}
+PUNCT = {'«': '"', '»': '"', '—': '-', '–': '-', '…': '...', '’': "'", 'ʼ': "'", '“': '"', '”': '"', ' ': ' '}
 PREFIX = ('advanced_collection.', 'flurry.', 'boss_rush.tutorial.', 'dungeon_rush.tutorial.', 'names.',
           'map_markers.hints.', 'map_markers.compass.', 'map_markers.symbols.', 'map_markers.colors.',
           'map_markers.palette.', 'quick_access.')
@@ -22,7 +22,8 @@ def hylia(k):
     return k.startswith(PREFIX) or k in EXACT
 # English 'Style' is one lookup for the settings panel (Unicode font) and the map hint (Latin-1 atlas): only ASCII
 # draws the same in both, so the word is Cyrillic look-alike Latin capitals.
-ASCII = {'customization.stamina_bar.style': 'CKIH', 'map_markers.palette.title': 'Скін  %d/%d'}
+ASCII = {'customization.stamina_bar.style': 'CKIH', 'common.done': 'OK', 'map_markers.palette.title': 'Скін  %d/%d'}
+# 'Done' is shared the same way: 'OK' is ASCII.
 bad = collections.Counter()
 def enc(s):
     out = []
