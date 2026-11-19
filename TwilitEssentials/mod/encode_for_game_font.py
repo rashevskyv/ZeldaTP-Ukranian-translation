@@ -24,7 +24,10 @@ def hylia(k):
     return k.startswith(PREFIX) or k in EXACT
 # English 'Style' is one lookup for the settings panel (Unicode font) and the map hint (Latin-1 atlas): only ASCII
 # draws the same in both, so the word is Cyrillic look-alike Latin capitals.
-ASCII = {'customization.stamina_bar.style': 'CKIH', 'common.done': 'OK', 'map_markers.palette.title': 'Скін  %d/%d'}
+ASCII = {'customization.stamina_bar.style': 'CKIH', 'common.done': 'OK', 'map_markers.palette.title': 'Скін  %d/%d',
+         # the collection menu items are also the confirm buttons of the Rml dialogs
+         'advanced_collection.settings.exit': 'Quit', 'advanced_collection.settings.load': 'Load',
+         'advanced_collection.settings.reset': 'Reset'}
 # 'Done' is shared the same way: 'OK' is ASCII.
 bad = collections.Counter()
 def enc(s):
