@@ -1,7 +1,7 @@
 {
   "customization.description": "Налаштуйте вигляд смужок і меню.",
   "customization.stamina_bar": "Шкала витривалості",
-  "customization.stamina_bar.style": "Стиль",
+  "customization.stamina_bar.style": "CKIH",
   "customization.stamina_bar.style.help": "**Типовий**: смужка у стилі Twilight Princess в HUD.<br/>**Колесо BotW**: колесо витривалості біля Лінка, додаткова витривалість як зовнішні кільця.",
   "customization.stamina_bar.x_offset": "Зсув по X",
   "customization.stamina_bar.x_offset.help": "Зсуває шкалу витривалості по горизонталі.",

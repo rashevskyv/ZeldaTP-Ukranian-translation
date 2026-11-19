@@ -18,6 +18,8 @@ EXACT = {'common.done', 'dungeon_rush.map_label', 'dungeon_rush.splits_section',
 def hylia(k):
     if k.startswith('quick_access.quick_access.') or k in ('quick_access.description', 'quick_access.mods'): return False
     if k.endswith('.help') and not k.startswith('advanced_collection.'): return False
+    # the load / reset / exit confirm dialogs are Rml (Unicode font)
+    if k.startswith(('advanced_collection.load.', 'advanced_collection.reset.', 'advanced_collection.exit.')): return False
     if k.startswith('collection.'): return True          # item names, descriptions, quest letters and dialogue
     return k.startswith(PREFIX) or k in EXACT
 # English 'Style' is one lookup for the settings panel (Unicode font) and the map hint (Latin-1 atlas): only ASCII
