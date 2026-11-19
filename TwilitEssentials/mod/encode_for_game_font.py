@@ -7,9 +7,18 @@ M = json.loads(pathlib.Path(r'E:\Emulators\RomHacking\Zelda\Twilight Princess\GC
 M = {k: v for k, v in M.items() if len(k) == 1 and len(v) == 1}
 used = set(M.values())
 PUNCT = {'«': '"', '»': '"', '—': '-', '–': '-', '…': '...', '’': "'", 'ʼ': "'", '“': '"', '”': '"', '\u00a0': ' '}
-PREFIX = ('advanced_collection.', 'collection.', 'flurry.', 'boss_rush.tutorial.', 'dungeon_rush.tutorial.')
-EXACT = {'dungeon_rush.map_label', 'rush.split_time'}
-def hylia(k): return (k.startswith(PREFIX) and not k.startswith('collection.') or k.startswith('collection.') and not k.startswith('menus.')) or k in EXACT
+PREFIX = ('advanced_collection.', 'flurry.', 'boss_rush.tutorial.', 'dungeon_rush.tutorial.', 'names.',
+          'map_markers.hints.', 'map_markers.compass.', 'map_markers.symbols.', 'map_markers.colors.',
+          'map_markers.palette.', 'quick_access.')
+EXACT = {'dungeon_rush.map_label', 'dungeon_rush.splits_section', 'dungeon_rush.customize.items_section',
+         'rush.best', 'rush.best_2', 'rush.best_3', 'rush.best_seg', 'rush.close', 'rush.continue', 'rush.final_time',
+         'rush.new_record_2', 'rush.pb', 'rush.pb_seg', 'rush.personal_best', 'rush.segment', 'rush.split_time',
+         'rush.splits', 'rush.sum_of_best', 'rush.sum_of_best_2', 'rush.add_remove', 'rush.clear_slots', 'rush.fight',
+         'rush.leaderboard', 'rush.leave_boss_rush', 'rush.start_cave', 'rush.start_master_rush'}
+def hylia(k):
+    if k.startswith('quick_access.quick_access.'): return False
+    if k.startswith('collection.'): return True          # item names, descriptions, quest letters and dialogue
+    return k.startswith(PREFIX) or k in EXACT
 bad = collections.Counter()
 def enc(s):
     out = []
