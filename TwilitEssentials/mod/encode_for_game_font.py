@@ -20,6 +20,9 @@ def hylia(k):
     if k.endswith('.help') and not k.startswith('advanced_collection.'): return False
     if k.startswith('collection.'): return True          # item names, descriptions, quest letters and dialogue
     return k.startswith(PREFIX) or k in EXACT
+# English 'Style' is one lookup for the settings panel (Unicode font) and the map hint (Latin-1 atlas): only ASCII
+# draws the same in both, so the word is Cyrillic look-alike Latin capitals.
+ASCII = {'customization.stamina_bar.style': 'CKIH', 'map_markers.palette.title': 'Скін  %d/%d'}
 bad = collections.Counter()
 def enc(s):
     out = []
@@ -33,6 +36,7 @@ shutil.rmtree(DST, ignore_errors=True); n = 0
 for p in SRC.glob('*/*.json'):
     d = json.loads(p.read_text('utf-8'))
     for k in d:
+        if k in ASCII: d[k] = ASCII[k]
         if hylia(k): d[k] = enc(d[k]); n += 1
     q = DST / p.parent.name / p.name; q.parent.mkdir(parents=True, exist_ok=True)
     q.write_text(json.dumps(d, ensure_ascii=False, indent=2) + '\n', 'utf-8', newline='\n')
