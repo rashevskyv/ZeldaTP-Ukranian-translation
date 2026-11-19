@@ -1,0 +1,107 @@
+# Builds the native part of the Twilit Essentials Ukrainian add-on (TwilitEssentials/mod) for every Dusklight
+# platform and combines the libraries into one bundle (artifact te-addon-all). The translation mod takes lib/ and
+# the verified mod.json metadata from it, so one .dusk works on every platform.
+name: Twilit Essentials add-on libraries
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "TwilitEssentials/mod/src/**"
+      - "TwilitEssentials/mod/CMakeLists.txt"
+      - ".github/workflows/te_addon.yml"
+
+env:
+  DUSKLIGHT_SHA: 8b70a4477b8a5331d8bda1bfd6b095c65880c856
+  TE_EXAMPLES_SHA: b8298f681cf20280778ec120bda96974c65e6821
+  SYMGEN_VERSION: v1.3.6
+
+jobs:
+  build:
+    name: Build ${{matrix.platform}}
+    runs-on: ${{matrix.runner}}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {platform: linux-x86_64, runner: ubuntu-latest}
+          - {platform: linux-aarch64, runner: ubuntu-24.04-arm}
+          - {platform: macos-arm64, runner: macos-latest}
+          - {platform: macos-x86_64, runner: macos-latest, cmake_args: -DCMAKE_OSX_ARCHITECTURES=x86_64}
+          - {platform: ios-arm64, runner: macos-latest,
+             cmake_args: -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0}
+          - {platform: windows-amd64, runner: windows-latest, msvc_arch: amd64}
+          - {platform: windows-arm64, runner: windows-latest, msvc_arch: amd64_arm64}
+          - {platform: android-aarch64, runner: ubuntu-latest, android_ndk: "29.0.14206865"}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: TwilitEssentials/mod
+
+      - name: Fetch Dusklight SDK and the Twilit Essentials headers
+        shell: bash
+        run: |
+          fetch() { git init -q "$1" && git -C "$1" fetch -q --depth 1 "$2" "$3" && git -C "$1" -c advice.detachedHead=false checkout -q FETCH_HEAD; }
+          fetch dusklight https://github.com/TwilitRealm/dusklight.git "$DUSKLIGHT_SHA"
+          git -C dusklight submodule update --init --depth 1 extern/aurora
+          fetch te-examples https://github.com/F1mmel/te-service-examples.git "$TE_EXAMPLES_SHA"
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.msvc_arch
+        with:
+          arch: ${{matrix.msvc_arch}}
+
+      - name: Install ninja
+        if: matrix.msvc_arch
+        run: choco install ninja
+
+      - uses: android-actions/setup-android@v3
+        if: matrix.android_ndk
+        with:
+          packages: ndk;${{matrix.android_ndk}}
+
+      - name: Configure and build
+        shell: bash
+        run: |
+          args=(-G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo ${{matrix.cmake_args}}
+                -DDUSKLIGHT_DIR="$PWD/dusklight" -DTE_EXAMPLES_DIR="$PWD/te-examples")
+          if [[ -n "${{matrix.android_ndk}}" ]]; then
+            args+=(-DCMAKE_TOOLCHAIN_FILE="$ANDROID_HOME/ndk/${{matrix.android_ndk}}/build/cmake/android.toolchain.cmake"
+                   -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-28)
+          fi
+          cmake -S TwilitEssentials/mod -B build "${args[@]}"
+          cmake --build build --parallel
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mod-${{matrix.platform}}
+          path: build/mods/*.dusk
+          if-no-files-found: error
+
+  combine:
+    name: Combine libraries
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mod-*
+          path: dist
+
+      - name: Merge lib/ trees and verify the native metadata
+        run: |
+          curl -fsSL -o symgen "https://github.com/encounter/symgen/releases/download/${SYMGEN_VERSION}/symgen-linux-x86_64"
+          chmod +x symgen
+          mkdir stage
+          first=$(ls dist/*/*.dusk | head -1)
+          unzip -q "$first" -x 'lib/*' -d stage
+          for bundle in dist/*/*.dusk; do unzip -q -o "$bundle" 'lib/*' -d stage; done
+          ./symgen modmeta --check --update-json stage/mod.json $(ls stage/lib/*/mod.so stage/lib/*/mod.dll 2>/dev/null)
+          ls stage/lib
+          (cd stage && zip -q -r -X ../te_addon_all.dusk .)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: te-addon-all
+          path: te_addon_all.dusk
+          if-no-files-found: error
