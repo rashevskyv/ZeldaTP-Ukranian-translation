@@ -16,7 +16,8 @@ EXACT = {'common.done', 'customization.stamina_bar.style', 'dungeon_rush.map_lab
          'rush.splits', 'rush.sum_of_best', 'rush.sum_of_best_2', 'rush.add_remove', 'rush.clear_slots', 'rush.fight',
          'rush.leaderboard', 'rush.leave_boss_rush', 'rush.start_cave', 'rush.start_master_rush'}
 def hylia(k):
-    if k.startswith('quick_access.quick_access.'): return False
+    if k.startswith('quick_access.quick_access.') or k in ('quick_access.description', 'quick_access.mods'): return False
+    if k.endswith('.help') and not k.startswith('advanced_collection.'): return False
     if k.startswith('collection.'): return True          # item names, descriptions, quest letters and dialogue
     return k.startswith(PREFIX) or k in EXACT
 bad = collections.Counter()
